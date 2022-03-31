@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"sync"
+	"time"
 )
 
 type (
@@ -33,7 +34,7 @@ var (
 )
 
 func (e *envyFormatter) Format(input string, level logLevel) string {
-	return string(level) + input
+	return time.Now().Format(time.RFC3339Nano) + " " + string(level) + input
 }
 
 const (
