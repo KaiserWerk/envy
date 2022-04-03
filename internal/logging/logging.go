@@ -25,15 +25,15 @@ type (
 		writer    io.Writer
 		formatter Formatter
 	}
-	envyFormatter struct{}
+	defaultFormatter struct{}
 )
 
 var (
 	_ Logger    = &envyLogger{}
-	_ Formatter = &envyFormatter{}
+	_ Formatter = &defaultFormatter{}
 )
 
-func (e *envyFormatter) Format(input string, level logLevel) string {
+func (e *defaultFormatter) Format(input string, level logLevel) string {
 	return time.Now().Format(time.RFC3339Nano) + " " + string(level) + input
 }
 
@@ -45,7 +45,7 @@ const (
 
 func (e *envyLogger) write(input string, level logLevel) {
 	formattedOutput := e.formatter.Format(input, level)
-	fmt.Fprintln(e.writer, formattedOutput)
+	_, _ = fmt.Fprintln(e.writer, formattedOutput)
 }
 
 func (e *envyLogger) Debug(i interface{}) {
@@ -88,6 +88,6 @@ func New(w io.Writer) Logger {
 	return &envyLogger{
 		mut:       new(sync.Mutex),
 		writer:    w,
-		formatter: &envyFormatter{},
+		formatter: &defaultFormatter{},
 	}
 }
