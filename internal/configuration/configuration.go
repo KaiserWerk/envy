@@ -7,15 +7,9 @@ import (
 )
 
 type AppConfig struct {
-	originalFile string `yaml:"-"`
-	HTTP         struct {
-		Enabled     bool   `yaml:"enabled"`
-		BindAddress string `yaml:"bind_address"`
-	} `yaml:"http"`
-	TCP struct {
-		Enabled     bool   `yaml:"enabled"`
-		BindAddress string `yaml:"bind_address"`
-	} `yaml:"tcp"`
+	originalFile string        `yaml:"-"`
+	BindAddress  string        `yaml:"bind_address"`
+	Auth         string        `yaml:"auth"`
 	Replications []Replication `yaml:"replications"`
 }
 
