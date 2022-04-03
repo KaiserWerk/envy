@@ -16,6 +16,12 @@ type AppConfig struct {
 		Enabled     bool   `yaml:"enabled"`
 		BindAddress string `yaml:"bind_address"`
 	} `yaml:"tcp"`
+	Replications []Replication `yaml:"replications"`
+}
+
+type Replication struct {
+	Address string
+	Auth    string
 }
 
 func FromFile(file string) (*AppConfig, error) {
