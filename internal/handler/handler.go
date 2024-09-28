@@ -2,7 +2,6 @@ package handler
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"os"
 	"sync"
@@ -14,6 +13,11 @@ import (
 const envHeader = "X-Env"
 const varHeader = "X-Var"
 const varValueHeader = "X-Var-Value"
+
+type Var struct {
+	Name  string `json:"name"`
+	Value string `json:"value"`
+}
 
 func NewHandler(config *configuration.AppConfig, logger logging.Logger) *Handler {
 	return &Handler{
@@ -76,7 +80,18 @@ func (b *Handler) GetVar(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Fprintf(w, `{"%s": "%s"}`, varName, varValue)
+	v := Var{
+		Name:  varName,
+		Value: varValue,
+	}
+
+	j, err := json.Marshal(v)
+	if err != nil {
+		http.Error(w, "internal error", http.StatusInternalServerError)
+		return
+	}
+
+	_, _ = w.Write(j)
 }
 
 func (b *Handler) SetVar(w http.ResponseWriter, r *http.Request) {
@@ -136,7 +151,13 @@ func (b *Handler) GetAllVars(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	j, err := json.MarshalIndent(vars, "", "\t")
+	d := make([]Var, 0, len(vars))
+
+	for n, v := range vars {
+		d = append(d, Var{Name: n, Value: v})
+	}
+
+	j, err := json.MarshalIndent(d, "", "\t")
 	if err != nil {
 		http.Error(w, `{"error": "internal error"}`, http.StatusInternalServerError)
 		return
