@@ -1,11 +1,16 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
+	"net/http"
 	"os"
+	"os/signal"
+	"time"
 
 	"github.com/KaiserWerk/envy/internal/configuration"
+	"github.com/KaiserWerk/envy/internal/handler"
 	"github.com/KaiserWerk/envy/internal/logging"
 )
 
@@ -25,10 +30,11 @@ var (
 func main() {
 	flag.Parse()
 
-	_, err := configuration.FromFile(*configFile)
+	config, err := configuration.FromFile(*configFile)
 	if err != nil {
 		fmt.Printf("could not read configuration from file '%s': %s\n", *configFile, err.Error())
-		os.Exit(-1)
+		fmt.Println("using defaults")
+		config = configuration.LoadDefaults()
 	}
 
 	fh, err := os.OpenFile(*logFile, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
@@ -42,4 +48,36 @@ func main() {
 	logger.Infof("Envy server; Version: %s; Version date: %s; Git Commit: %s", Version, Date, Commit)
 	logger.Infof("Used configuration file: '%s'", *configFile)
 
+	hd := handler.NewHandler(config, logger)
+	_ = hd.LoadVars()
+	router := http.NewServeMux()
+	router.HandleFunc("/getvar", hd.GetVar)
+	router.HandleFunc("/setvar", hd.SetVar)
+	router.HandleFunc("/getallvars", hd.GetAllVars)
+
+	srv := http.Server{
+		Handler:           router,
+		Addr:              config.BindAddress,
+		ReadTimeout:       10 * time.Second,
+		WriteTimeout:      10 * time.Second,
+		ReadHeaderTimeout: 5 * time.Second,
+	}
+
+	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
+	defer cancel()
+
+	go func() {
+		<-ctx.Done()
+
+		shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 10*time.Second)
+
+		if err := srv.Shutdown(shutdownCtx); err != nil {
+			logger.Errorf("graceful server shutdown failed: %s", err)
+		}
+		shutdownCancel()
+	}()
+
+	logger.Infof("starting up server on %s...", config.BindAddress)
+	srv.ListenAndServe()
+	logger.Info("goodbye!")
 }

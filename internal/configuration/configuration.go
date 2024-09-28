@@ -46,3 +46,9 @@ func (a *AppConfig) ToFile(name string) error {
 
 	return os.WriteFile(fileToWrite, y, 0644)
 }
+
+func LoadDefaults() *AppConfig {
+	return &AppConfig{
+		BindAddress: "localhost:7000",
+	}
+}
