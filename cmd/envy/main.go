@@ -12,6 +12,7 @@ import (
 	"github.com/KaiserWerk/envy/internal/configuration"
 	"github.com/KaiserWerk/envy/internal/handler"
 	"github.com/KaiserWerk/envy/internal/logging"
+	"github.com/KaiserWerk/envy/internal/middleware"
 )
 
 // version info
@@ -50,10 +51,13 @@ func main() {
 
 	hd := handler.NewHandler(config, logger)
 	_ = hd.LoadVars()
+
+	mwBase := middleware.NewBase(config.AuthKey)
+
 	router := http.NewServeMux()
-	router.HandleFunc("/getvar", hd.GetVar)
-	router.HandleFunc("/setvar", hd.SetVar)
-	router.HandleFunc("/getallvars", hd.GetAllVars)
+	router.HandleFunc("/getvar", mwBase.Auth(hd.GetVar))
+	router.HandleFunc("/setvar", mwBase.Auth(hd.SetVar))
+	router.HandleFunc("/getallvars", mwBase.Auth(hd.GetAllVars))
 
 	srv := http.Server{
 		Handler:           router,

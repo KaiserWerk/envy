@@ -9,7 +9,7 @@ import (
 type AppConfig struct {
 	originalFile string        `yaml:"-"`
 	BindAddress  string        `yaml:"bind_address"`
-	Auth         string        `yaml:"auth"`
+	AuthKey      string        `yaml:"auth_key"`
 	Replications []Replication `yaml:"replications"`
 }
 
@@ -50,5 +50,6 @@ func (a *AppConfig) ToFile(name string) error {
 func LoadDefaults() *AppConfig {
 	return &AppConfig{
 		BindAddress: "localhost:7000",
+		AuthKey:     "default",
 	}
 }
