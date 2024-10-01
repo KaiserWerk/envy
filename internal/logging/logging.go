@@ -3,6 +3,7 @@ package logging
 import (
 	"fmt"
 	"io"
+	"os"
 	"sync"
 	"time"
 )
@@ -25,6 +26,7 @@ type (
 		writer    io.Writer
 		formatter Formatter
 	}
+
 	defaultFormatter struct{}
 )
 
@@ -84,7 +86,13 @@ func (e *envyLogger) Errorf(f string, v ...interface{}) {
 	e.write(fmt.Sprintf(f, v...), errorLevel)
 }
 
-func New(w io.Writer) Logger {
+func New(w io.Writer, console bool) Logger {
+	if console {
+		return &consoleLogger{
+			writer:    os.Stdout,
+			formatter: &defaultFormatter{},
+		}
+	}
 	return &envyLogger{
 		mut:       new(sync.Mutex),
 		writer:    w,
