@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"os"
 	"sync"
@@ -10,7 +11,7 @@ import (
 	"github.com/KaiserWerk/envy/internal/logging"
 )
 
-const envHeader = "X-Env"
+const scopeHeader = "X-Scope"
 const varHeader = "X-Var"
 const varValueHeader = "X-Var-Value"
 
@@ -53,14 +54,14 @@ func (b *Handler) StoreVars() error {
 }
 
 func (b *Handler) GetVar(w http.ResponseWriter, r *http.Request) {
-	env := r.Header.Get(envHeader)
-	if env == "" {
-		http.Error(w, `{"error": "missing X-Env header"}`, http.StatusBadRequest)
+	scope := r.Header.Get(scopeHeader)
+	if scope == "" {
+		http.Error(w, fmt.Sprintf(`{"error": "missing %s header"}`, scopeHeader), http.StatusBadRequest)
 		return
 	}
 	varName := r.Header.Get(varHeader)
 	if varName == "" {
-		http.Error(w, `{"error": "missing X-Var header"}`, http.StatusBadRequest)
+		http.Error(w, fmt.Sprintf(`{"error": "missing %s header"}`, varHeader), http.StatusBadRequest)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -68,7 +69,7 @@ func (b *Handler) GetVar(w http.ResponseWriter, r *http.Request) {
 	b.mut.RLock()
 	defer b.mut.RUnlock()
 
-	vars, ok := b.vars[env]
+	vars, ok := b.vars[scope]
 	if !ok {
 		http.Error(w, `{"error": "env not found"}`, http.StatusBadRequest)
 		return
@@ -95,19 +96,19 @@ func (b *Handler) GetVar(w http.ResponseWriter, r *http.Request) {
 }
 
 func (b *Handler) SetVar(w http.ResponseWriter, r *http.Request) {
-	env := r.Header.Get(envHeader)
+	env := r.Header.Get(scopeHeader)
 	if env == "" {
-		http.Error(w, `{"error": "missing X-Env header"}`, http.StatusBadRequest)
+		http.Error(w, fmt.Sprintf(`{"error": "missing %s header"}`, scopeHeader), http.StatusBadRequest)
 		return
 	}
 	varName := r.Header.Get(varHeader)
 	if varName == "" {
-		http.Error(w, `{"error": "missing X-Var header"}`, http.StatusBadRequest)
+		http.Error(w, fmt.Sprintf(`{"error": "missing %s header"}`, varHeader), http.StatusBadRequest)
 		return
 	}
 	varValue := r.Header.Get(varValueHeader)
 	if varName == "" {
-		http.Error(w, `{"error": "missing X-Var-Value header"}`, http.StatusBadRequest)
+		http.Error(w, fmt.Sprintf(`{"error": "missing %s header"}`, varValueHeader), http.StatusBadRequest)
 		return
 	}
 
@@ -134,9 +135,9 @@ func (b *Handler) SetVar(w http.ResponseWriter, r *http.Request) {
 }
 
 func (b *Handler) GetAllVars(w http.ResponseWriter, r *http.Request) {
-	env := r.Header.Get(envHeader)
-	if env == "" {
-		http.Error(w, `{"error": "missing X-Env header"}`, http.StatusBadRequest)
+	scope := r.Header.Get(scopeHeader)
+	if scope == "" {
+		http.Error(w, fmt.Sprintf(`{"error": "missing %s header"}`, scopeHeader), http.StatusBadRequest)
 		return
 	}
 
@@ -145,7 +146,7 @@ func (b *Handler) GetAllVars(w http.ResponseWriter, r *http.Request) {
 	b.mut.RLock()
 	defer b.mut.RUnlock()
 
-	vars, ok := b.vars[env]
+	vars, ok := b.vars[scope]
 	if !ok {
 		http.Error(w, `{"error": "env not found"}`, http.StatusBadRequest)
 		return
