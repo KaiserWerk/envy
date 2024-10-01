@@ -65,6 +65,7 @@ func main() {
 		ReadTimeout:       10 * time.Second,
 		WriteTimeout:      10 * time.Second,
 		ReadHeaderTimeout: 5 * time.Second,
+		MaxHeaderBytes:    2048,
 	}
 
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
